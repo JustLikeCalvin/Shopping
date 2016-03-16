@@ -29,7 +29,7 @@ def get_product_info(code):
 
 	if len(close_product) > 0:
 		print "판매불가여부 [%s]" % unicode(close_product)
-		write_csv(code, "판매불가 상품", ["" for i in range(10)], "", "", "", "", "", "")
+		write_csv(code, "판매불가 상품", ["" for i in range(10)], "", "", "", "", "", "", "", "")
 		return
 
 	# 상품명을 가져온다.
@@ -142,21 +142,39 @@ def get_product_info(code):
 	price_2 = price_2.strip()
 	price_3 = price_3.strip()
 
-	# TODO 상품만족도 고객평가 점수 추출
-	# TODO 상품평 등록 건수 및 상품 Q&A 건수 추출
+	# 상품만족도 고객평가 점수 추출
+	evaluation_score = ""
+	try:
+		score_info = bs.find('div', {'class': 'grade_box bg2'}).find_all('dd')
+		for _score in score_info:
+			if str(_score).find('alt="점"') >= 0:
+				evaluation_score = _score.text
+	except AttributeError as ae:
+		evaluation_score = ""
+
+	# 상품평 등록 건수 추출
+	comment_count = ""
+	try:
+		comment_info = bs.find('span', {'id': 'gdasTotalCnt_1'})
+		for _comment in comment_info:
+			comment_count = _comment.strip("(").strip(")")
+	except AttributeError as ae:
+		comment_count = ""
 
 	print "상품명 [%s]" % unicode(product_name)
 	print "카테고리명 [%s]" % unicode(category_name)
 	print "브랜드 [%s]" % unicode(brand_name)
 	print "제조사 / 원산지 [%s] [%s]" % (maker[0], maker[1])
 	print "판매가 [%s] 최대혜택가 [%s] 카드청구할인가 [%s]" % (unicode(price_1), unicode(price_2), unicode(price_3))
+	print "고객평가점수 [%s]" % unicode(evaluation_score)
+	print "상품평 [%s]" % unicode(comment_count)
 
-	write_csv(code, product_name, category_list, brand_name, maker[0], maker[1], price_1, price_2, price_3)
+	write_csv(code, product_name, category_list, brand_name, maker[0], maker[1], price_1, price_2, price_3, evaluation_score, comment_count)
 
 
 # print product_name.prettify()
 
-def write_csv(product_code, product_name, category_list, brand_name, maker, origin, price_1, price_2, price_3):
+def write_csv(product_code, product_name, category_list, brand_name, maker, origin, price_1, price_2, price_3, evaluation_score, comment_count):
 	cw = csv.writer(file('product_info.csv', 'ab'))
 	cw.writerow([product_code.encode('euc-kr'), \
 	             product_name.encode('euc-kr'), \
@@ -175,7 +193,9 @@ def write_csv(product_code, product_name, category_list, brand_name, maker, orig
 	             origin.encode('euc-kr'), \
 	             price_1, \
 	             price_2, \
-	             price_3])
+	             price_3, \
+	             evaluation_score, \
+	             comment_count])
 
 
 product_code_list = []
@@ -285,7 +305,7 @@ product_code_list = ["12493530", \
 category_list = ["category_0", "category_1", "category_2", "category_3", "category_4", "category_5", "category_6", \
                  "category_7", "category_8", "category_9"]
 write_csv("product_code", "product_name", category_list, "brand_name", "maker", "origin", "price_1", "price_2",
-          "price_3")
+          "price_3", "evaluation_score", "comment_count")
 
 input_file = open('TOP5MGOODS.csv', 'r')
 csv_reader = csv.reader(input_file)
