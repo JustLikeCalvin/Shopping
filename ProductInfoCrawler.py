@@ -12,8 +12,8 @@ sys.setdefaultencoding('utf-8')
 
 # 웹 사이트에 접속하여 상품코드에 해당하는 상품 정보를 조회 후 HTML을 파싱하여 관련 정보를 추출한다.
 # 추출 된 정보를 화면에 출력 후 CSV 형태 파일로 저장한다.
-def get_product_info(code):
-    print "---------------------------------------------"
+def get_product_info(code, total_index, current_index):
+    print "---------------------- [ %s / %s ] -----------------------" % (current_index, total_index)
     print "상품코드 [%s]" % unicode(code)
 
     # 상품 상세 페이지 URL (상품코드가 파라미터로 전달 됨)
@@ -60,8 +60,9 @@ def get_product_info(code):
     category_name = ""
     category_list = ["" for i in range(10)]
     category_count = 0
+    # 외부 사이트 링크가 걸려 있는 경우를 조건으로 추가하여 제외 처리
     for _category in category_info:
-        if str(_category).find('<a href="#" onclick=') == -1:
+        if str(_category).find('<a href="#" onclick=') == -1 & str(_category).find('<a href="http') == -1:
             category_name = category_name + _category.text + " > "
             category_list[category_count] = _category.text
             category_count += 1
@@ -224,12 +225,17 @@ for row in csv_reader:
         product_code_list.append(row[0])
     row_count += 1
     # TODO 실제 데이터 저장을 위해서라면 아래 두 줄 삭제 필요
+    """
     if row_count > 100:
         break
+    """
 
 # 상품코드를 읽은 후 해당 CSV 파일 닫기
 input_file.close()
 
 # 읽은 상품코드 리스트를 이용해서 상품정보를 웹에서 얻어온 후 별도 CSV 파일에 저장
+total_index = len(product_code_list)
+current_index = 1
 for product_code in product_code_list:
-    get_product_info(product_code)
+    get_product_info(product_code, total_index, current_index)
+    current_index += 1
